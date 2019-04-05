@@ -2,7 +2,7 @@
 
 The purpose of this program is to display implied volatility (IV) of options on stocks that are in the SMI. It consists of one single Python file. It currently runs with a delay of 15 minutes.
 
-##Prerequisites
+## Prerequisites
 The program makes use of the following python libraries that need to be installed:
 - os
 - math
