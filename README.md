@@ -1,5 +1,6 @@
 # Implied Volatility Analysis Project
 
+
 The purpose of this program is to display implied volatility (IV) of options on stocks that are in the SMI. It consists of one single Python file. It currently runs with a delay of 15 minutes.
 
 ## Prerequisites
@@ -33,5 +34,6 @@ The program makes use of three different kind of functions:
 3. Functions to display the implied volatility graphically 
 
 ### Attention:
-As the functions that gather data from the internet are dependent on the websites they take the data from, the program might suddenly stop working. The program last tested positively to run on 5. April 2019. 
-When the websites change these dependent functions have to be adapted to the new websites. Either just the link changes, then the url dictionaries can simply be updated. When the whole website changes, maybe more has to be updated. 
+As the functions that gather data from the internet are dependent on the websites they take the data from, the program might suddenly stop working. The program was last tested to run on 5. April 2019. When the websites change, these dependent functions have to be adapted to the new websites.
+
+In case you have any questions about the program do not hesitate to contact kevin.joerg@student.unisg.ch 
