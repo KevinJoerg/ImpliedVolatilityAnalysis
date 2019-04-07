@@ -167,15 +167,12 @@ def interpolate_df(data):
         data[column] = interpolate_gaps(data[column])
     for row in data.index:
         data.loc[row] = interpolate_gaps(data.loc[row])
-    data.to_csv('interpolate.csv')
     return data
 
 
 # Function to check if option has bid and ask price.
 # Returns bid and ask dataset which only contains values when at same position the other dataset also has a value.
 def check_bid_and_ask(b, a):
-    b.to_csv('bidentry.csv')
-    a.to_csv('askentry.csv')
     for column in a.columns:
         for strike in a.index:
             if str(a.loc[strike, column]) == 'nan':
@@ -184,8 +181,6 @@ def check_bid_and_ask(b, a):
         for strike in b.index:
             if str(b.loc[strike, column]) == 'nan':
                 a.loc[strike, column] = np.NaN
-    b.to_csv('bidexit.csv')
-    a.to_csv('askexit.csv')
     return b, a
 
 
@@ -209,7 +204,6 @@ def change_prices_to_iv(prices, putt_call):
             for strike in prices.index:
                 prices.loc[strike, column] = \
                     calculate_iv_put(share_p, strike, time_exp, interest_exp, prices.loc[strike, column])
-    prices.to_csv('impliedvol.csv')
     return prices
 
 
@@ -218,7 +212,6 @@ def change_prices_to_iv(prices, putt_call):
 def price(b, a):
     p = pd.concat((b, a))
     p = p.groupby(p.index).mean()
-    p.to_csv('price.csv')
     return p
 
 
@@ -475,14 +468,17 @@ def eurex_prices(share_symbol, call_put):
         bid_all_dates = bid_all_dates.append(bid_date, sort=True)
     ask_all_dates = ask_all_dates.groupby(level=0).sum()
     ask_all_dates = ask_all_dates.replace(0, np.nan)
-    ask_all_dates.to_csv('ask.csv')
     bid_all_dates = bid_all_dates.groupby(level=0).sum()
     bid_all_dates = bid_all_dates.replace(0, np.nan)
-    bid_all_dates.to_csv('bid.csv')
+    # Uncomment next two rows to store output of this function as csv
+    # ask_all_dates.to_csv('ask.csv')
+    # bid_all_dates.to_csv('bid.csv')
     return bid_all_dates, ask_all_dates
 
 
 # Function to get forward interest rates for different durations and stores it in df
+# Output is a pandas df with two columns. First column dtype object with text libor duration. Second column is dtype
+# float64 with interest rates.
 def interest_rate():
     url = 'https://www.finanzen.ch/zinsen'
     html = urlopen(url)
