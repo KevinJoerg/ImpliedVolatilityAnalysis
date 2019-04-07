@@ -16,7 +16,7 @@ from mpl_toolkits.mplot3d import Axes3D
 
 # Section definition of functions **************************************************************************************
 
-# Section calculation of IV functions *****
+# Section calculation of implied volatility functions *****
 
 
 # Black-Scholes call price
@@ -79,7 +79,8 @@ def calculate_iv_call(s, k, t, r, c):
 
 # Use Newton's method to calculate the implied volatility of put option with price c
 def calculate_iv_put(s, k, t, r, c):
-    # If speed to high probability that newtons method jumps to negative IV and stays there. Good start value is 0.5
+    # If speed to high, there is probability that newtons method jumps to negative IV and stays there.
+    # Good start value is 0.5
     speed = 0.5
     # You can set the error which IV is calculated for
     error = 0.0001
@@ -110,6 +111,8 @@ def calculate_iv_put(s, k, t, r, c):
 
 
 # This function returns the time in years from today to third friday in month of string time with format 'YYYYMM'
+# This function is based on the ideas of this website:
+# https://stackoverflow.com/questions/28680896/how-can-i-get-the-3rd-friday-of-a-month-in-python/28681204#28681204
 def time_to_expiration(time):
     year = int(time[:4])
     month = int(time[4:])
@@ -127,6 +130,8 @@ def time_to_expiration(time):
 # Section of functions to manipulate df *****
 
 # This function linearly interpolates NaN values in an array
+# This function is based on the ideas of this website:
+# https://stackoverflow.com/questions/36455083/working-with-nan-values-in-matplotlib/36457704
 def interpolate_gaps(values):
     values = np.asarray(values)
 
@@ -134,8 +139,8 @@ def interpolate_gaps(values):
     list_values = values.tolist()
     for i in range(len(list_values)):
         list_values[i] = str(list_values[i])
-    # If the list only contains NaN return entered list
-    if list_values.count('nan') == len(list_values):
+    # If the list contains less than 2 non nan values return entered list
+    if list_values.count('nan') >= len(list_values)-1:
         return values
     else:
         # This code interpolates the values
@@ -162,12 +167,15 @@ def interpolate_df(data):
         data[column] = interpolate_gaps(data[column])
     for row in data.index:
         data.loc[row] = interpolate_gaps(data.loc[row])
+    data.to_csv('interpolate.csv')
     return data
 
 
 # Function to check if option has bid and ask price.
 # Returns bid and ask dataset which only contains values when at same position the other dataset also has a value.
 def check_bid_and_ask(b, a):
+    b.to_csv('bidentry.csv')
+    a.to_csv('askentry.csv')
     for column in a.columns:
         for strike in a.index:
             if str(a.loc[strike, column]) == 'nan':
@@ -176,6 +184,8 @@ def check_bid_and_ask(b, a):
         for strike in b.index:
             if str(b.loc[strike, column]) == 'nan':
                 a.loc[strike, column] = np.NaN
+    b.to_csv('bidexit.csv')
+    a.to_csv('askexit.csv')
     return b, a
 
 
@@ -199,6 +209,7 @@ def change_prices_to_iv(prices, putt_call):
             for strike in prices.index:
                 prices.loc[strike, column] = \
                     calculate_iv_put(share_p, strike, time_exp, interest_exp, prices.loc[strike, column])
+    prices.to_csv('impliedvol.csv')
     return prices
 
 
@@ -207,6 +218,7 @@ def change_prices_to_iv(prices, putt_call):
 def price(b, a):
     p = pd.concat((b, a))
     p = p.groupby(p.index).mean()
+    p.to_csv('price.csv')
     return p
 
 
@@ -295,6 +307,8 @@ def plot_all(iv):
 
 
 # create a gif of the volatility surface
+# This function is based on the ideas of this website:
+# https://python-graph-gallery.com/342-animation-on-3d-plot/
 def volatility_surface_gif(df):
 
     # Change dataset to individual x,y,z points
@@ -461,8 +475,10 @@ def eurex_prices(share_symbol, call_put):
         bid_all_dates = bid_all_dates.append(bid_date, sort=True)
     ask_all_dates = ask_all_dates.groupby(level=0).sum()
     ask_all_dates = ask_all_dates.replace(0, np.nan)
+    ask_all_dates.to_csv('ask.csv')
     bid_all_dates = bid_all_dates.groupby(level=0).sum()
     bid_all_dates = bid_all_dates.replace(0, np.nan)
+    bid_all_dates.to_csv('bid.csv')
     return bid_all_dates, ask_all_dates
 
 
@@ -486,7 +502,7 @@ def interest_rate():
     return interest
 
 
-# Find the relevant interest rate in interest_rate df for days
+# Find the relevant interest rate in interest_rate df for number of days in future
 def interest_days(days, interest):
     if days >= 252:
         r = interest.at[7, 1]
@@ -507,15 +523,18 @@ def interest_days(days, interest):
 
 # Section of the actual program ****************************************************************************************
 
+
+# Program description
 print('\nThis program analyses implied volatility (IV) of options on SMI stocks. The program only works properly during'
       ' market opening hours and with a delay of 15 minutes.')
 
-# The program runs until it is stopped
+# The program runs until it is stopped by input e
 while True:
 
     # Loop to get a correct share symbol
     while True:
-        print('Enter the symbol of the share to analyse. Enter l to show a list of all supported symbols:')
+        # Enter lower or upper L because in Jupiter Notebook lower l looks like 1.
+        print('Enter the symbol of the share to analyse. Enter l or L to show a list of all supported symbols:')
         share = input()
         share = share.upper()
         share_list = share_price('l')
@@ -542,7 +561,7 @@ while True:
 
     print('Downloading option prices. This might take a while.\n')
 
-    # Download option prices and prepare data set
+    # Download option prices and apply several functions to prepare data set
     bids, asks = eurex_prices(share, call_putt)
     bids, asks = check_bid_and_ask(bids, asks)
     price_option = price(bids, asks)
