@@ -320,7 +320,7 @@ def volatility_surface_gif(df):
     print('The 3D animation is created now. This might take a while.')
 
     # Create a picture of the plot for every 2nd possible angle
-    for angle in range(0, 360, 1):
+    for angle in range(0, 360, 2):
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
         # cmap is the color of the plot, different options available
@@ -340,7 +340,7 @@ def volatility_surface_gif(df):
         # Remove the png, not needed anymore
         os.remove(filename)
     # Duration influences the speed of the giff
-    duration = 0.02
+    duration = 0.04
     # Create the giff
     imageio.mimwrite(current_path + '/3D/' + 'implied_volatility' + share + '.gif', images, duration=duration, loop=1)
     print('The 3D animation of the volatility surface is stored at: ' + current_path + '/3D/' + 'implied_volatility' +
