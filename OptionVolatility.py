@@ -1,3 +1,4 @@
+# Import necessary libraries
 import math
 import matplotlib.pyplot as plt
 import imageio
@@ -50,7 +51,7 @@ def calculate_iv_call(s, k, t, r, c):
     # If speed to high probability that newtons method jumps to negative IV and stays there. Good start value is 0.5
     speed = 0.5
     # You can set the error which IV is calculated for
-    error = 0.0001
+    error = 0.001
     # Start values
     sigma_old = 0.1
     sigma_new = 0.2
@@ -70,7 +71,6 @@ def calculate_iv_call(s, k, t, r, c):
                 sigma_old = sigma_new
                 sigma_new = sigma_old - ((call(s, k, t, r, sigma_new) - c) / vega(s, k, t, r, sigma_new)) * speed
                 if sigma_new < 0:
-                    print('Error. IV is negative.')
                     sigma_new = np.nan
                     break
             break
@@ -83,7 +83,7 @@ def calculate_iv_put(s, k, t, r, c):
     # Good start value is 0.5
     speed = 0.5
     # You can set the error which IV is calculated for
-    error = 0.0001
+    error = 0.001
     # Start values
     sigma_old = 0.1
     sigma_new = 0.2
@@ -103,14 +103,14 @@ def calculate_iv_put(s, k, t, r, c):
                 sigma_old = sigma_new
                 sigma_new = sigma_old - ((put(s, k, t, r, sigma_new) - c) / vega(s, k, t, r, sigma_new)) * speed
                 if sigma_new < 0:
-                    print('Error. IV is negative.')
                     sigma_new = np.nan
                     break
             break
     return sigma_new
 
 
-# This function returns the time in years from today to third friday in month of string time with format 'YYYYMM'
+# This function returns the time in years from today to third friday in month (the expire day of options on the Eurex
+# exchange) of string time with format 'YYYYMM'
 # This function is based on the ideas of this website:
 # https://stackoverflow.com/questions/28680896/how-can-i-get-the-3rd-friday-of-a-month-in-python/28681204#28681204
 def time_to_expiration(time):
@@ -123,6 +123,8 @@ def time_to_expiration(time):
                     day.weekday() == calendar.FRIDAY and
                     day.month == month][2]
     business_days = np.busday_count(date.today(), third_friday)
+    # Half a day is added for the current day
+    business_days += 0.5
     # Assumption that a year has 252 business days
     return business_days / 252
 
@@ -137,7 +139,7 @@ def interpolate_gaps(values):
 
     # Create list from array to count nan
     list_values = values.tolist()
-    for i in range(len(list_values)):
+    for i in range(len(values)):
         list_values[i] = str(list_values[i])
     # If the list contains less than 2 non nan values return entered list
     if list_values.count('nan') >= len(list_values)-1:
@@ -307,6 +309,7 @@ def volatility_surface_gif(df):
     # Change dataset to individual x,y,z points
     df = df.unstack().reset_index()
     df.columns = ["X", "Y", "Z"]
+    df = df.dropna()
 
     # Change maturity date to time to maturity in years
     for strike in df.index:
@@ -349,7 +352,8 @@ def volatility_surface_gif(df):
     # Duration influences the speed of the giff
     duration = 0.04
     # Create the giff
-    imageio.mimwrite(current_path + '/3D/' + 'implied_volatility' + share + '.gif', images, duration=duration, loop=1)
+    imageio.mimwrite(current_path + '/3D/' + share + call_putt + '3DVolatilitySurface' +
+                     datetime.now().strftime('%Y-%m-%d %H:%M:%S') + '.gif', images, duration=duration, loop=1)
     print('The 3D animation of the volatility surface is stored at: ' + current_path + '/3D/' + 'implied_volatility' +
           share + '.gif\n')
 
@@ -388,7 +392,7 @@ def share_price(ticker):
 
 
 # Create two dataframes, one with all bid and one with all ask prices of options on share symbol from eurexchange.com
-def eurex_prices(share_symbol, call_put):
+def eurex_prices(share_symbol):
     # First find all available maturity dates
     # Initial link, does not require maturity date
     share_url = {'ABBN': 'ABB-950336', 'ADEN': 'Adecco-951460', 'CSGN': 'Credit-Suisse-951996',
@@ -522,7 +526,7 @@ def interest_days(days, interest):
 
 # Program description
 print('\nThis program analyses implied volatility (IV) of options on SMI stocks. The program only works properly during'
-      ' market opening hours and with a delay of 15 minutes.')
+      ' market opening hours and runs with a delay of 15 minutes.')
 
 # The program runs until it is stopped by input e
 while True:
@@ -558,7 +562,7 @@ while True:
     print('Downloading option prices. This might take a while.\n')
 
     # Download option prices and apply several functions to prepare data set
-    bids, asks = eurex_prices(share, call_putt)
+    bids, asks = eurex_prices(share)
     bids, asks = check_bid_and_ask(bids, asks)
     price_option = price(bids, asks)
     iv_df = change_prices_to_iv(price_option, call_putt)
@@ -614,3 +618,5 @@ while True:
     # Exit the program completely
     if program_function == 'e':
         break
+
+
