@@ -33,6 +33,6 @@ The program makes use of three different kind of functions:
 3. Functions to display the implied volatility graphically 
 
 ### Attention:
-As the functions that gather data from the internet are dependent on the websites they take the data from, the program might suddenly stop working. The program was last tested to run on 5. April 2019. When the websites change, the functions that get the prices from the internet have to be adapted to the changes on the websites.
+As the functions that gather data from the internet are dependent on the websites they take the data from, the program might suddenly stop working. The program was last tested to run on 22. May 2019. When the websites change, the functions that get the prices from the internet have to be adapted to the changes on the websites.
 
 In case you have any questions about the program do not hesitate to contact kevin.joerg@student.unisg.ch 
